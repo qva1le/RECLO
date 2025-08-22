@@ -7,6 +7,6 @@ class UserStatus(str, Enum):
     blocked = "blocked"
     deleted = "deleted"
 
-class EmailStatus(str, Enum):
+class CodeStatus(str, Enum):
     email_verify = "email_verify"
     password_reset = "password_reset"
