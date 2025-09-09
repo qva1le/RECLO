@@ -1,24 +1,16 @@
-import sys
-from pathlib import Path
-
-import uvicorn
 from fastapi import FastAPI
 
 from src.config import settings
-
-
-
-sys.path.append(str(Path(__file__).parent.parent))
-
 from src.api.auth import router as router_auth
+from src.exceptions import AppException, to_http
 
 print(f"{settings.DB_URL=}")
 
 app = FastAPI()
 
+# Подключаем роуты
 app.include_router(router_auth)
 
-
-
-if __name__ == '__main__':
-    uvicorn.run("main:app", reload=True)
+@app.exception_handler(AppException)
+async def app_exception_handler(_, exc: AppException):
+    raise to_http(exc)

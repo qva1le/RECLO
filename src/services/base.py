@@ -1,4 +1,4 @@
-from src.utils.db_namager import DBManager
+from src.utils.db_manager import DBManager
 
 
 class BaseService:

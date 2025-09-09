@@ -21,6 +21,9 @@ class Conflict(AppError):
 class RepositoryError(AppError):
     pass
 
+class Unauthorized(AppError):
+    status_code = 401
+
 from sqlalchemy.exc import IntegrityError
 
 _PG_UNIQUE = "23505"

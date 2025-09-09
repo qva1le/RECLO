@@ -11,6 +11,7 @@ class DBManager:
 
         self.users = UsersRepository(self.session, mapper=UsersDataMapper)
 
+
         return self
 
     async def __aexit__(self, *args):
@@ -19,3 +20,6 @@ class DBManager:
 
     async def commit(self):
         await self.session.commit()
+
+    async def rollback(self):
+        await self.session.rollback()

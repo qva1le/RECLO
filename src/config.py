@@ -8,6 +8,10 @@ class Settings(BaseSettings):
     DB_PORT: int
     DB_NAME: str
 
+    JWT_SECRET_KEY: str
+    JWT_ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+
 
     @property
     def DB_URL(self):

@@ -1,16 +1,16 @@
 from pydantic import BaseModel, EmailStr, ConfigDict
 
 
-class UserAdd(BaseModel):
-    name: str
+# class UserAdd(BaseModel):
+#     name: str
+#     email: EmailStr
+#     password: str
+
+class LoginIn(BaseModel):
     email: EmailStr
     password: str
 
-class LoginIn:
-    email: EmailStr
-    password: str
-
-class TokenPair:
+class TokenPair(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
