@@ -1,4 +1,5 @@
-from src.repositories.mappers.mappers import UsersDataMapper
+from src.repositories.mappers.mappers import UsersDataMapper, SessionsDataMapper
+from src.repositories.sessions import SessionsRepository
 from src.repositories.users import UsersRepository
 
 
@@ -10,6 +11,7 @@ class DBManager:
         self.session = self.session_factory()
 
         self.users = UsersRepository(self.session, mapper=UsersDataMapper)
+        self.sessions = SessionsRepository(self.session, mapper=SessionsDataMapper)
 
 
         return self
