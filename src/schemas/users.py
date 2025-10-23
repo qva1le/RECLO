@@ -1,10 +1,10 @@
 from pydantic import BaseModel, EmailStr, ConfigDict
 
 
-# class UserAdd(BaseModel):
-#     name: str
-#     email: EmailStr
-#     password: str
+class UserAdd(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
 
 class LoginIn(BaseModel):
     email: EmailStr
