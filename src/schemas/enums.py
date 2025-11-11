@@ -10,3 +10,20 @@ class UserStatus(str, Enum):
 class CodeStatus(str, Enum):
     email_verify = "email_verify"
     password_reset = "password_reset"
+
+class SellerApplicationsStatus(str, Enum):
+    pending = "pending"
+    approved = "approved"
+    rejected = "rejected"
+
+class BusinessType(str, Enum):
+    ip = "ip"
+    ooo = "ooo"
+    self = "self_employed"
+
+class ShopType(str, Enum):
+    brand = "brand"
+    designer = "designer"
+    merch = "merch"
+    resale = "resale"
+
