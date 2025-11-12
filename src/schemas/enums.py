@@ -19,11 +19,16 @@ class SellerApplicationsStatus(str, Enum):
 class BusinessType(str, Enum):
     ip = "ip"
     ooo = "ooo"
-    self = "self_employed"
+    self_employed = "self_employed"
 
 class ShopType(str, Enum):
     brand = "brand"
     designer = "designer"
     merch = "merch"
     resale = "resale"
+
+class ShopStatus(str, Enum):
+    active = "active"
+    blocked = "blocked"
+
 
