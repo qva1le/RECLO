@@ -5,6 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.auth import router as router_auth
 from src.api.verify import router as router_verify
+from src.api.seller_applications import router as router_seller_applications
+from src.api.admin_seller_applications import router as router_admin_seller_applications
 from src.config import settings
 from src.connectors.redis_connector import RedisManager
 from src.exceptions import AppException, to_http
@@ -43,7 +45,8 @@ app.add_middleware(
 # роуты
 app.include_router(router_auth)
 app.include_router(router_verify)
-
+app.include_router(router_seller_applications)
+app.include_router(router_admin_seller_applications)
 
 # единый маппинг доменных исключений в HTTP
 @app.exception_handler(AppException)

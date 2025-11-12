@@ -69,7 +69,6 @@ async def get_current_user(
 async def get_current_user_id(
     user: Annotated[UsersOrm, Depends(get_current_user)]
 ) -> int:
-    """Возвращает только id пользователя"""
     return int(user.id)
 
 
