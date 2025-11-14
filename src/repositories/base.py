@@ -58,6 +58,21 @@ class BaseRepository:
         except MultipleResultsFound:
             raise RepositoryError("Expected exactly one row, got many")
 
+    async def get_all(self, limit: int | None, offset: int | None, **filters) -> list[Any]:
+        stmt = select(self.model)
+        if filters:
+            stmt = stmt.filter_by(**filters)
+        if offset is not None:
+            stmt = stmt.offset(offset)
+        if limit is not None:
+            stmt = stmt.limit(limit)
+
+        res = await self.session.execute(stmt)
+
+        models = res.scalars().all()
+        return [self.mapper.map_to_domain_entity(m) for m in models]
+
+
     async def add(self, data: Union[BaseModel, Mapping[str, Any]]):
         try:
             payload = self._to_payload(data, exclude_unset=True)
