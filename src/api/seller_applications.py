@@ -3,7 +3,7 @@ from sqlalchemy import select
 
 from src.api.dependencies import DBDep, UserIdDep
 from src.models.seller_applications import SellerApplicationsOrm
-from src.schemas.enums import SellerApplicationsStatus
+from src.schemas.enums import SellerApplicationsStatus, ShopStatus
 from src.schemas.seller_applications import SellerApplicationOut, SellerApplicationCreate
 
 router = APIRouter(prefix="/applications", tags=["Заявка на продавца"])
@@ -52,13 +52,14 @@ async def create_seller_application(
 @router.get("/my", response_model=SellerApplicationOut | None)
 async def get_my_seller_application(
         db: DBDep,
-        user: UserIdDep,
+        user_id: UserIdDep,
+        status: ShopStatus
 ):
     stmt = (
         select(SellerApplicationsOrm)
-        .filter(SellerApplicationsOrm.user_id == user.id)
+        .filter(SellerApplicationsOrm.user_id == user_id)
         .order_by(SellerApplicationsOrm.created_at.desc())
         .limit(1)
     )
-    app_obj = (await db.execute(stmt)).scalar_one_or_none()
+    app_obj = (await db.session.execute(stmt)).scalar_one_or_none()
     return app_obj

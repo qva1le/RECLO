@@ -63,3 +63,6 @@ async def app_exception_handler(_, exc: AppException):
 @app.get("/healthz")
 async def healthz():
     return {"ok": True}
+
+#ЗАПУСК
+# uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
