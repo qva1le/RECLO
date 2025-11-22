@@ -49,17 +49,17 @@ async def create_seller_application(
     await db.session.refresh(app_obj)
     return app_obj
 
-@router.get("/my", response_model=SellerApplicationOut | None)
+@router.get("/my", response_model=SellerApplicationsStatus| None)
 async def get_my_seller_application(
         db: DBDep,
         user_id: UserIdDep,
-        status: ShopStatus
 ):
     stmt = (
-        select(SellerApplicationsOrm)
+        select(SellerApplicationsOrm.status)
         .filter(SellerApplicationsOrm.user_id == user_id)
         .order_by(SellerApplicationsOrm.created_at.desc())
         .limit(1)
     )
-    app_obj = (await db.session.execute(stmt)).scalar_one_or_none()
-    return app_obj
+    result = await db.session.execute(stmt)
+    status = result.scalar_one_or_none()
+    return status
