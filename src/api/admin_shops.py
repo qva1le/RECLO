@@ -2,7 +2,7 @@ from fastapi import APIRouter, Query
 
 from src.api.dependencies import DBDep
 from src.schemas.enums import ShopType, ShopStatus, BusinessType
-from src.schemas.shops import ShopOut
+from src.schemas.shops import ShopOut, ShopStatusChange
 from src.services.shops import ShopsService
 
 router = APIRouter(prefix="/admin/shops", tags=["Админка для магазинов"])
@@ -40,4 +40,15 @@ async def list_shops_admin(
     )
 
     return shops
+
+
+@router.post("/{shop_id}/block", response_model=ShopStatusChange)
+async def block_shop(shop_id: int, db: DBDep):
+    shop = await ShopsService(db).block_shop(shop_id)
+    return ShopStatusChange(status=shop.status)
+
+@router.post("/{shop_id}/unblock", response_model=ShopStatusChange)
+async def unblock_shop(shop_id: int, db: DBDep):
+    shop = await ShopsService(db).unblock_shop(shop_id)
+    return ShopStatusChange(status=shop.status)
 

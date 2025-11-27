@@ -2,7 +2,7 @@ from select import select
 
 from fastapi import APIRouter, HTTPException, Depends, Query, Response
 
-from src.api.dependencies import DBDep, UserIdDep
+from src.api.dependencies import DBDep, UserIdDep, ShopDep
 from src.models.shops import ShopsOrm
 from src.schemas.enums import ShopStatus
 from src.schemas.shops import ShopOut, ShopEditUser
@@ -15,6 +15,7 @@ router = APIRouter(prefix="/shops", tags=["Магазины"])
 @router.get("/my_shop", response_model=ShopOut)
 async def get_my_shop(
     db: DBDep,
+    _shop: ShopDep,
     user_id: UserIdDep
 ):
     shop = await ShopsService(db).get_my_shop_user(user_id)
@@ -23,6 +24,7 @@ async def get_my_shop(
 @router.put("/my/edit_shop", response_model=ShopOut)
 async def edit_my_shop(
         db: DBDep,
+        _shop: ShopDep,
         user_id: UserIdDep,
         data: ShopEditUser
 ):
@@ -32,6 +34,7 @@ async def edit_my_shop(
 @router.delete("/my/delete_shop")
 async def delete_my_shop(
         db: DBDep,
+        _shop: ShopDep,
         user_id: UserIdDep
 ):
     await ShopsService(db).delete_my_shop(user_id)

@@ -1,11 +1,14 @@
 # src/api/dependencies.py
 from typing import Annotated
-from fastapi import Depends, Request, Security
+from fastapi import Depends, Request, Security, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy import select
 
 from src.config import settings
 from src.core.security import decode_jwt
 from src.exceptions import AuthorizationException, ObjectNotFoundException
+from src.models.shops import ShopsOrm
+from src.schemas.enums import ShopStatus
 from src.utils.db_manager import DBManager
 from src.database import async_session_maker
 from src.connectors.redis_connector import RedisManager
@@ -84,3 +87,27 @@ def get_redis(request: Request) -> RedisManager:
 
 
 RedisDep = Annotated[RedisManager, Depends(get_redis)]
+
+
+async def ensure_shop_not_blocked(
+        db: DBDep,
+        user_id: UserIdDep
+) -> ShopsOrm:
+    stmt = (
+        select(ShopsOrm)
+        .filter(ShopsOrm.owner_id == user_id)
+        .limit(1)
+    )
+    result = await db.session.execute(stmt)
+    shop = result.scalar_one_or_none()
+
+    if shop is None:
+        raise HTTPException(status_code=404, detail="У вас ещё нет магазина")
+
+    if shop.status == ShopStatus.blocked:
+        raise HTTPException(status_code=403, detail="Вам магазин заблокирован. Настройки и добавление товаров недоступны")
+
+    return shop
+
+ShopDep = Annotated[ShopsOrm, Depends(ensure_shop_not_blocked)]
+

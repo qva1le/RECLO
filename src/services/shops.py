@@ -1,6 +1,5 @@
 from fastapi import HTTPException
-
-
+from sqlalchemy import select
 
 from src.models.shops import ShopsOrm
 from src.schemas.enums import ShopStatus, BusinessType, ShopType
@@ -90,5 +89,43 @@ class ShopsService(BaseService):
         if city is not None:
             filters["city"] = city
         return await self.get_shops(city=city)
+
+    async def block_shop(self,  shop_id: int):
+        stmt = select(ShopsOrm).filter(ShopsOrm.id == shop_id)
+        res = await self.db.session.execute(stmt)
+        shop = res.scalar_one_or_none()
+
+        if shop is None:
+            raise HTTPException(status_code=404, detail="Магазин не найден")
+
+        if shop.status == ShopStatus.blocked:
+            raise HTTPException(status_code=400, detail="Магазин уже заблокирован")
+
+        shop.status = ShopStatus.blocked
+
+        await self.db.session.commit()
+        await self.db.session.refresh(shop)
+
+        return shop
+
+    async def unblock_shop(self, shop_id: int):
+        stmt = select(ShopsOrm).filter(ShopsOrm.id == shop_id)
+        res = await self.db.session.execute(stmt)
+        shop = res.scalar_one_or_none()
+
+        if shop is None:
+            raise HTTPException(status_code=404, detail="Магазин не найден")
+
+        if shop.status == ShopStatus.active:
+            raise HTTPException(status_code=400, detail="Магазин уже разблокирован")
+
+        shop.status = ShopStatus.active
+
+        await self.db.session.commit()
+        await self.db.session.refresh(shop)
+
+        return shop
+
+
 
 
