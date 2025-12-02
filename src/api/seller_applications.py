@@ -3,6 +3,7 @@ from sqlalchemy import select
 
 from src.api.dependencies import DBDep, UserIdDep
 from src.models.seller_applications import SellerApplicationsOrm
+from src.models.shops import ShopsOrm
 from src.schemas.enums import SellerApplicationsStatus, ShopStatus
 from src.schemas.seller_applications import SellerApplicationOut, SellerApplicationCreate
 
@@ -14,6 +15,17 @@ async def create_seller_application(
         db: DBDep,
         user: UserIdDep
 ):
+    shop_stmt = (
+        select(ShopsOrm)
+        .filter(ShopsOrm.owner_id == user)
+        .limit(1)
+    )
+
+    existing_shop = (await db.session.execute(shop_stmt)).scalar_one_or_none()
+
+    if existing_shop:
+        raise HTTPException(status_code=400, detail="У вас уже есть магазин. Нельзя подать новую заявку")
+
     stmt = (
         select(SellerApplicationsOrm)
         .filter(

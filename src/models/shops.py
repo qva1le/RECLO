@@ -33,6 +33,12 @@ class ShopsOrm(Base):
         SAEnum(ShopType),
         nullable=False,
     )
+
+    instagram_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    vk_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    telegram_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    tiktok_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
     status: Mapped[ShopStatus] = mapped_column(
         SAEnum(ShopStatus),
         default=ShopStatus.active,

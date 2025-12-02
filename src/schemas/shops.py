@@ -10,6 +10,10 @@ class ShopEditUser(BaseModel):
     avatar_url: str
     description: str
     city: str
+    instagram_url: str | None = None
+    vk_url: str | None = None
+    telegram_url: str | None = None
+    tiktok_url: str | None = None
 
 class ShopEditAdmin(BaseModel):
     owner_id: int
@@ -34,6 +38,10 @@ class ShopOut(BaseModel):
     inn: str
     business_type: BusinessType
     shop_type: ShopType
+    instagram_url: str | None = None
+    vk_url: str | None = None
+    telegram_url: str | None = None
+    tiktok_url: str | None = None
     status: ShopStatus
     created_at: datetime
     updated_at: datetime
@@ -46,7 +54,11 @@ class ShopUpdateUser(BaseModel):
     avatar_url: str | None = Field(None, max_length=500)
     description: str | None = Field(None, max_length=500)
     city: str | None = Field(None, max_length=60)
-    social_links: str | None = None
+
+    instagram_url: str | None = None
+    vk_url: str | None = None
+    telegram_url: str | None = None
+    tiktok_url: str | None = None
 
 
 class ShopUpdateAdmin(BaseModel):
@@ -60,3 +72,15 @@ class ShopUpdateAdmin(BaseModel):
 
 class ShopStatusChange(BaseModel):
     status: ShopStatus
+
+class ShopsPublic(BaseModel):
+    name: str
+    avatar_url: str
+    description: str
+    shop_type: str
+    city: str
+
+    instagram_url: str | None = None
+    vk_url: str | None = None
+    telegram_url: str | None = None
+    tiktok_url: str | None = None

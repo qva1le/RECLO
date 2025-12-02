@@ -4,12 +4,19 @@ from fastapi import APIRouter, HTTPException, Depends, Query, Response
 
 from src.api.dependencies import DBDep, UserIdDep, ShopDep
 from src.models.shops import ShopsOrm
-from src.schemas.enums import ShopStatus
-from src.schemas.shops import ShopOut, ShopEditUser
+from src.schemas.enums import ShopStatus, ShopType
+from src.schemas.shops import ShopOut, ShopEditUser, ShopsPublic
 from src.services.shops import ShopsService
 from src.utils.db_manager import DBManager
 
 router = APIRouter(prefix="/shops", tags=["Магазины"])
+
+
+@router.get("", response_model=list[ShopsPublic])
+async def get_all_shops(db: DBDep, shop_type: ShopType | None = Query(None)):
+    shops = await ShopsService(db).get_all_shops_public(shop_type=shop_type)
+    return [ShopsPublic.model_validate(shop, from_attributes=True) for shop in shops]
+
 
 
 @router.get("/my_shop", response_model=ShopOut)

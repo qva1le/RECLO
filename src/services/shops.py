@@ -52,6 +52,18 @@ class ShopsService(BaseService):
         return await self.db.shops.get_all(limit=limit, offset=offset,**filters)
 
 
+    async def get_all_shops_public(self, shop_type: ShopType | None = None):
+        filters = {
+            "status": ShopStatus.active,
+        }
+
+        if shop_type is not None:
+            filters["shop_type"] = shop_type
+
+        shops = await self.db.shops.get_all(limit=10000, offset=0, **filters)
+        return shops
+
+
     async def get_all_shops_admin(
             self, limit: int | None = None,
             offset: int | None = None,
