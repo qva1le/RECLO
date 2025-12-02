@@ -111,3 +111,6 @@ async def ensure_shop_not_blocked(
 
 ShopDep = Annotated[ShopsOrm, Depends(ensure_shop_not_blocked)]
 
+
+async def ensure_active_subscription():
+    ...
