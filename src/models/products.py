@@ -1,0 +1,54 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+from datetime import datetime
+
+from sqlalchemy import ForeignKey, String, Text, Integer, Float, Boolean, DateTime
+from sqlalchemy.orm import mapped_column, Mapped, relationship
+
+from src.database import Base
+
+if TYPE_CHECKING:
+    from src.models.product_attribute_values import ProductAttributesValuesOrm
+    from src.models.product_fires import ProductFiresOrm
+    from src.models.product_reviews import ProductReviewsOrm
+
+
+class ProductsOrm(Base):
+    __tablename__ = "products"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    shop_id: Mapped[int] = mapped_column(ForeignKey("shops.id"), index=True, nullable=False)
+    article: Mapped[str] = mapped_column(String(16), unique=True, index=True, nullable=False)
+
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+
+    price: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    quantity: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+
+    fires_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    reviews_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    rating_avg: Mapped[float | None] = mapped_column(Float)
+
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+
+    reviews: Mapped[list["ProductReviewsOrm"]] = relationship(
+        back_populates="product",
+        cascade="all, delete-orphan"
+    )
+
+    fires: Mapped[list["ProductFiresOrm"]] = relationship(
+        back_populates="product",
+        cascade="all, delete-orphan",
+    )
+
+    attributes: Mapped[list["ProductAttributesValuesOrm"]] = relationship(
+        back_populates="product",
+        cascade="all, delete-orphan"
+    )

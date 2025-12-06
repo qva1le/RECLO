@@ -1,3 +1,4 @@
+import enum
 from enum import Enum
 
 
@@ -30,5 +31,11 @@ class ShopType(str, Enum):
 class ShopStatus(str, Enum):
     active = "active"
     blocked = "blocked"
+
+class AttributeDataType(str, enum.Enum):
+    STRING = "string"
+    INTEGER = "integer"
+    FLOAT = "float"
+    BOOLEAN = "boolean"
 
 

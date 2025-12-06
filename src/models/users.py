@@ -1,10 +1,18 @@
-from datetime import datetime
-from time import timezone
+from __future__ import annotations
+from typing import TYPE_CHECKING
 
-from sqlalchemy import String, DateTime, UniqueConstraint, func, Enum, Boolean
-from sqlalchemy.orm import Mapped, mapped_column
+from datetime import datetime
+
+from sqlalchemy import String, DateTime, UniqueConstraint, func, Boolean
+from sqlalchemy import Enum as SAEnum
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from src.schemas.enums import UserStatus
 from src.database import Base
+
+if TYPE_CHECKING:
+    from src.models.product_fires import ProductFiresOrm
+    from src.models.product_reviews import ProductReviewsOrm
 
 
 class UsersOrm(Base):
@@ -19,7 +27,7 @@ class UsersOrm(Base):
         nullable=False
     )
     status:Mapped[UserStatus] = mapped_column(
-        Enum(UserStatus),
+        SAEnum(UserStatus, name="userstatus"),
         default=UserStatus.pending_email,
         nullable=False
     )
@@ -39,3 +47,13 @@ class UsersOrm(Base):
     __table_args__ = (
         UniqueConstraint("email", name="uq_users_email"),
     )
+
+    product_reviews: Mapped[list["ProductReviewsOrm"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    product_fires: Mapped[list["ProductFiresOrm"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
