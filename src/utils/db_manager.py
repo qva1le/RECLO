@@ -1,4 +1,5 @@
-from src.repositories.mappers.mappers import UsersDataMapper, SessionsDataMapper, ShopsDataMapper
+from src.repositories.mappers.mappers import UsersDataMapper, SessionsDataMapper, ShopsDataMapper, ProductsDataMapper
+from src.repositories.products import ProductsRepository
 from src.repositories.sessions import SessionsRepository
 from src.repositories.shops import ShopsRepository
 from src.repositories.users import UsersRepository
@@ -14,6 +15,7 @@ class DBManager:
         self.users = UsersRepository(self.session, mapper=UsersDataMapper)
         self.sessions = SessionsRepository(self.session, mapper=SessionsDataMapper)
         self.shops = ShopsRepository(self.session, mapper=ShopsDataMapper)
+        self.products = ProductsRepository(self.session, mapper=ProductsDataMapper)
 
         return self
 
