@@ -109,6 +109,15 @@ class ProductsService(BaseService):
         await self.db.session.commit()
 
 
+    async def activate_product_for_owner(self, user_id: int, product_id: int) -> None:
+        product = await self._get_product_for_owner(product_id, user_id)
+        if not product.is_active:
+            return
+        product.is_active = True
+
+        await self.db.session.commit()
+
+
     async def delete_product_for_owner(self, product_id: int, user_id: int):
         product = await self._get_product_for_owner(product_id, user_id)
 
