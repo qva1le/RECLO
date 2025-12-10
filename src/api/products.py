@@ -8,7 +8,7 @@ from src.services.products import ProductsService
 
 router = APIRouter(prefix="/products", tags=["Товары"])
 
-@router.post("", response_model=ProductPublic)
+@router.post("", response_model=ProductPublic, summary="Для всех")
 async def create_product(payload: ProductCreate, db: DBDep, user_id: UserIdDep):
     service = ProductsService(db)
     product = await service.create_product_for_owner(
@@ -46,7 +46,7 @@ async def delete_product(product_id: int, db: DBDep, user_id: UserIdDep):
     return
 
 
-@router.get("/{product_id}", response_model=ProductPublic)
+@router.get("/{product_id}", response_model=ProductPublic, summary="Карточка товара")
 async def get_product_public(product_id: int, db: DBDep):
     service = ProductsService(db)
     product = await service.get_product_public(product_id=product_id)
