@@ -8,14 +8,13 @@ class ProductBase(BaseModel):
     quantity: conint(ge=0) = 1
 
 class ProductCreate(ProductBase):
-    shop_id: int
-    article: constr(max_length=16)
+    pass
 
 class ProductUpdate(BaseModel):
     title: constr(max_length=100) | None = None
-    description: str = Field(..., max_length=500)
-    price: conint(ge=0)
-    quantity: conint(ge=0) = 1
+    description: str | None = Field(default=None, max_length=500)
+    price: conint(ge=0) | None = None
+    quantity: conint(ge=0) | None = None
     is_active: bool | None = None
 
 class ProductPublic(ProductBase):

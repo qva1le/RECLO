@@ -9,6 +9,7 @@ from src.api.seller_applications import router as router_seller_applications
 from src.api.admin_seller_applications import router as router_seller_applications_admin
 from src.api.shops import router as router_shops
 from src.api.admin_shops import router as router_shop_admin
+from src.api.products import router as router_products
 from src.config import settings
 from src.connectors.redis_connector import RedisManager
 from src.exceptions import AppException, to_http
@@ -35,14 +36,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-# 👇 добавляем CORS прямо после создания app
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # твой Vite frontend
-    allow_credentials=True,  # нужно для cookie/refresh токенов
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # роуты
 app.include_router(router_auth)
@@ -51,6 +44,7 @@ app.include_router(router_seller_applications)
 app.include_router(router_seller_applications_admin)
 app.include_router(router_shops)
 app.include_router(router_shop_admin)
+app.include_router(router_products)
 
 
 # единый маппинг доменных исключений в HTTP

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+
 
 from datetime import datetime
 
@@ -9,10 +9,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.schemas.enums import UserStatus
 from src.database import Base
-
-if TYPE_CHECKING:
-    from src.models.product_fires import ProductFiresOrm
-    from src.models.product_reviews import ProductReviewsOrm
 
 
 class UsersOrm(Base):
@@ -49,10 +45,12 @@ class UsersOrm(Base):
     )
 
     product_reviews: Mapped[list["ProductReviewsOrm"]] = relationship(
+        "ProductReviewsOrm",
         back_populates="user",
         cascade="all, delete-orphan"
     )
     product_fires: Mapped[list["ProductFiresOrm"]] = relationship(
+        "ProductFiresOrm",
         back_populates="user",
         cascade="all, delete-orphan"
     )

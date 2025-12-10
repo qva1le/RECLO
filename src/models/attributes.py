@@ -15,10 +15,19 @@ if TYPE_CHECKING:
 
 class AttributesOrm(Base):
     __tablename__ = "attributes"
+
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    code: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
-    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    code: Mapped[str] = mapped_column(
+        String(50),
+        unique=True,
+        index=True,
+        nullable=False,
+    )
+    name: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+    )
 
     data_type: Mapped[AttributeDataType] = mapped_column(
         SAEnum(AttributeDataType, name="attribute_data_type"),
@@ -26,10 +35,14 @@ class AttributesOrm(Base):
         nullable=False,
     )
 
-    # см, кг и тп
+    # см, кг и т.п.
     unit: Mapped[str | None] = mapped_column(String(20))
 
-    sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    sort_order: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        nullable=False,
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
@@ -37,7 +50,9 @@ class AttributesOrm(Base):
         nullable=False,
     )
 
-    values: Mapped[list["ProductAttributesValuesOrm"]] = relationship(
+
+    values = relationship(
+        "ProductAttributesValuesOrm",
         back_populates="attribute",
         cascade="all, delete-orphan",
     )

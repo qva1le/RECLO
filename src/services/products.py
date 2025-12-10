@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import HTTPException
 from sqlalchemy import select
 
@@ -8,9 +10,8 @@ from src.services.base import BaseService
 
 
 class ProductsService(BaseService):
-    async def _get_shop_for_owner(self, shop_id: int, user_id: int) -> ShopsOrm:
+    async def _get_shop_for_owner(self, user_id: int) -> ShopsOrm:
         stmt = select(ShopsOrm).filter(
-        ShopsOrm.id == shop_id,
                 ShopsOrm.owner_id == user_id
         )
         res = await self.db.session.execute(stmt)
@@ -51,18 +52,21 @@ class ProductsService(BaseService):
 
         return product
 
-
     async def create_product_for_owner(self, user_id: int, payload: ProductCreate) -> ProductsOrm:
-        await self._get_product_for_owner(payload.shop_id, user_id)
+        shop = await self._get_shop_for_owner(user_id=user_id)
 
-        stmt = select(ProductsOrm).filter(ProductsOrm.article == payload.article)
+        article = f"{shop.id}-{uuid.uuid4().hex[:8]}"
+
+
+        stmt = select(ProductsOrm).filter(ProductsOrm.article == article)
         res = await self.db.session.execute(stmt)
         if res.scalar_one_or_none():
             raise HTTPException(status_code=400, detail="Товар с таким артикулом уже существует")
 
+
         product = ProductsOrm(
-            shop_id=payload.shop_id,
-            article=payload.article,
+            shop_id=shop.id,
+            article=article,
             title=payload.title,
             description=payload.description,
             price=payload.price,
@@ -71,7 +75,7 @@ class ProductsService(BaseService):
 
         self.db.session.add(product)
         await self.db.session.commit()
-        await self.db.session.refresh()
+        await self.db.session.refresh(product)
 
         return product
 
@@ -99,6 +103,8 @@ class ProductsService(BaseService):
 
         if not product.is_active:
             return
+
+        product.is_active = False
 
         await self.db.session.commit()
 

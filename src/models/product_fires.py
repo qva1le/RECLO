@@ -1,6 +1,5 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-
 from datetime import datetime
 
 from sqlalchemy import ForeignKey, DateTime, UniqueConstraint
@@ -15,18 +14,35 @@ if TYPE_CHECKING:
 
 class ProductFiresOrm(Base):
     __tablename__ = "product_fires"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
     __table_args__ = (
-        # Один пользователь — один огонёк на товар (без накрутки)
+        # Один пользователь — один огонёк на товар
         UniqueConstraint("product_id", "user_id", name="uq_fire_product_user"),
     )
 
-    product_id: Mapped[int] = mapped_column(ForeignKey("products.id"), index=True, nullable=False)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    product_id: Mapped[int] = mapped_column(
+        ForeignKey("products.id"),
+        index=True,
+        nullable=False,
+    )
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"),
+        index=True,
+        nullable=False,
+    )
 
-    product: Mapped["ProductsOrm"] = relationship(back_populates="fires")
-    user: Mapped["UsersOrm"] = relationship(back_populates="product_fires")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+    )
 
+    product = relationship(
+        "ProductsOrm",
+        back_populates="fires",
+    )
+    user = relationship(
+        "UsersOrm",
+        back_populates="product_fires",
+    )
