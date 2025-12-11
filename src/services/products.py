@@ -42,7 +42,10 @@ class ProductsService(BaseService):
         stmt = select(ProductsOrm).filter(ProductsOrm.id == product_id)
 
         if active_only:
-            stmt = stmt.filter(ProductsOrm.is_active.is_(True))
+            stmt = stmt.filter(
+                ProductsOrm.is_active.is_(True),
+                ProductsOrm.is_blocked.is_(False),
+            )
 
         res = await self.db.session.execute(stmt)
         product = res.scalar_one_or_none()
@@ -83,6 +86,11 @@ class ProductsService(BaseService):
     async def update_product_for_owner(self, user_id: int, product_id: int, payload: ProductUpdate) -> ProductsOrm:
         product = await self._get_product_for_owner(product_id, user_id)
 
+        if product.is_blocked:
+            raise HTTPException(
+                status_code=403,
+                detail="Товар заблокирован администрацией сайта. Действие недоступно, обратитесь в поддержку")
+
         data = payload.model_dump(exclude_unset=True)
 
         forbidden_fields = {"id", "shop_id", "article", "fires_count", "reviews_count", "rating_avg"}
@@ -106,11 +114,22 @@ class ProductsService(BaseService):
 
         product.is_active = False
 
+        if product.is_blocked:
+            raise HTTPException(
+                status_code=403,
+                detail="Товар заблокирован администрацией сайта. Действие недоступно, обратитесь в поддержку")
+
         await self.db.session.commit()
 
 
     async def activate_product_for_owner(self, user_id: int, product_id: int) -> None:
         product = await self._get_product_for_owner(product_id, user_id)
+
+        if product.is_blocked:
+            raise HTTPException(
+                status_code=403,
+                detail="Товар заблокирован администрацией сайта. Действие недоступно, обратитесь в поддержку")
+
         if not product.is_active:
             return
         product.is_active = True
@@ -120,6 +139,11 @@ class ProductsService(BaseService):
 
     async def delete_product_for_owner(self, product_id: int, user_id: int):
         product = await self._get_product_for_owner(product_id, user_id)
+
+        if product.is_blocked:
+            raise HTTPException(
+                status_code=403,
+                detail="Товар заблокирован администрацией сайта. Действие недоступно, обратитесь в поддержку")
 
         await self.db.session.delete(product)
         await self.db.session.commit()
@@ -133,6 +157,7 @@ class ProductsService(BaseService):
         stmt = (
             select(ProductsOrm)
             .filter(ProductsOrm.is_active.is_(True))
+            .filter(ProductsOrm.is_blocked.is_(False))
             .order_by(ProductsOrm.created_at.desc())
             .limit(limit)
             .offset(offset)
