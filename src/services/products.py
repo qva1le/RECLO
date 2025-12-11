@@ -1,5 +1,4 @@
 import uuid
-
 from fastapi import HTTPException
 from sqlalchemy import select
 
@@ -54,6 +53,7 @@ class ProductsService(BaseService):
             raise HTTPException(status_code=404, detail="Товар не найден")
 
         return product
+
 
     async def create_product_for_owner(self, user_id: int, payload: ProductCreate) -> ProductsOrm:
         shop = await self._get_shop_for_owner(user_id=user_id)
@@ -168,3 +168,115 @@ class ProductsService(BaseService):
 
         return list(products)
 
+
+    async def _admin_get_product(self, product_id: int) -> ProductsOrm:
+        stmt = select(ProductsOrm).filter(ProductsOrm.id == product_id)
+        res = await self.db.session.execute(stmt)
+        product = res.scalar_one_or_none()
+
+        if not product:
+            raise HTTPException(status_code=404, detail="Товар не найден")
+
+        return product
+
+    async def admin_list_products(
+            self,
+            limit: int = 100,
+            offset: int = 0,
+            shop_id: int | None = None,
+            owner_id: int | None = None,
+            only_blocked: bool | None = None,
+            only_active: bool | None = None,
+    ) -> list[ProductsOrm]:
+        stmt = (
+            select(ProductsOrm)
+            .join(ShopsOrm, ShopsOrm.id == ProductsOrm.shop_id)
+            .order_by(ProductsOrm.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+
+        if shop_id is not None:
+            stmt = stmt.filter(ProductsOrm.shop_id == shop_id)
+
+        if owner_id is not None:
+            stmt = stmt.filter(ShopsOrm.id == owner_id)
+
+        if only_blocked is True:
+            stmt = stmt.filter(ProductsOrm.is_blocked.is_(True))
+        elif only_blocked is False:
+            stmt = stmt.filter(ProductsOrm.is_blocked.is_(False))
+
+        if only_active is True:
+            stmt = stmt.filter(ProductsOrm.is_active.is_(True))
+        if only_active is False:
+            stmt = stmt.filter(ProductsOrm.is_active.is_(False))
+
+        res = await self.db.session.execute(stmt)
+        products = res.scalars().all()
+        return list(products)
+
+    async def admin_get_product(self, product_id: int) -> ProductsOrm:
+        return await self._admin_get_product(product_id)
+
+
+    async def admin_delete_product(self, product_id: int) -> None:
+        product = await self._admin_get_product(product_id)
+        await self.db.session.delete(product)
+        await self.db.session.commit()
+
+
+    async def admin_block_product(self, product_id: int, reason: str | None = None) ->ProductsOrm:
+        product = await self._admin_get_product(product_id)
+
+        if product.is_blocked:
+            return product
+
+        product.is_blocked = True
+        product.blocked_reason = reason
+
+        product.is_active = False
+
+        await self.db.session.commit()
+        await self.db.session.refresh(product)
+        return product
+
+    async def admin_unblock_product(self, product_id: int) -> ProductsOrm:
+        product = await self._admin_get_product(product_id)
+
+        if not product.is_blocked:
+            return product
+
+        product.is_blocked = False
+        product.blocked_reason = None
+
+        await self.db.session.commit()
+        await self.db.session.refresh(product)
+
+        return product
+
+    async def admin_update_product(self, product_id: int, payload: ProductUpdate) -> ProductsOrm:
+        product = await self._admin_get_product(product_id)
+
+        data = payload.model_dump(exclude_unset=True)
+
+        forbidden_fields ={
+            "id",
+            "shop_id",
+            "article",
+            "fires_count",
+            "reviews_count",
+            "rating_avg",
+            "is_blocked",
+            "blocked_reason",
+        }
+
+        for field in forbidden_fields:
+            data.pop(field, None)
+
+        for field, value in data.items():
+            setattr(product, field, value)
+
+        await self.db.session.commit()
+        await self.db.session.refresh(product)
+        return product
