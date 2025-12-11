@@ -29,3 +29,15 @@ class ProductPublic(ProductBase):
 
     model_config = ConfigDict(from_attributes=True)
 
+class ProductAdminPublic(ProductBase):
+    is_blocked: bool
+    blocked_reason: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class BlockProductPayload(BaseModel):
+    reason: str
+
+
+

@@ -10,6 +10,8 @@ from src.api.admin_seller_applications import router as router_seller_applicatio
 from src.api.shops import router as router_shops
 from src.api.admin_shops import router as router_shop_admin
 from src.api.products import router as router_products
+from src.api.admin_products import router as router_products_admin
+
 from src.config import settings
 from src.connectors.redis_connector import RedisManager
 from src.exceptions import AppException, to_http
@@ -45,7 +47,7 @@ app.include_router(router_seller_applications_admin)
 app.include_router(router_shops)
 app.include_router(router_shop_admin)
 app.include_router(router_products)
-
+app.include_router(router_products_admin)
 
 # единый маппинг доменных исключений в HTTP
 @app.exception_handler(AppException)
