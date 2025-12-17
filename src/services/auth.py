@@ -12,6 +12,7 @@ from src.exceptions import (
     AuthorizationException,
 )
 from src.models.users import UsersOrm
+from src.schemas.enums import UserStatus
 from src.schemas.users import UserAdd, LoginIn, TokenPair
 from src.services.base import BaseService
 from src.core.security import hash_password, verify_password, create_jwt, decode_jwt
@@ -24,7 +25,7 @@ class AuthServices(BaseService):
 
         exists = await self.db.users.get_by_email(email_norm)
         if exists:
-            raise AlreadyExistsException("User with this email already exists")
+            raise AlreadyExistsException("Пользователь с таким email уже существует")
 
         hashed = hash_password(data.password)
 
@@ -35,15 +36,16 @@ class AuthServices(BaseService):
                     {
                         "name": data.name.strip(),
                         "email": email_norm,
-                        # проверь название колонки! если у тебя password_hash — используй его
                         "password_hash": hashed,
+                        "email_verified": False,
+                        "status": UserStatus.pending_email
                     }
                 ),
             )
             await self.db.commit()
         except IntegrityError:
             await self.db.rollback()
-            raise AlreadyExistsException("User with this email already exists")
+            raise AlreadyExistsException("Пользователь с таким email уже существует")
 
         return UserSchema.model_validate(created)
 
@@ -51,27 +53,29 @@ class AuthServices(BaseService):
         email = data.email.lower().strip()
         user: UsersOrm | None = await self.db.users.get_by_email(email)
 
-        # ВАЖНО: приведи к реальному имени поля в модели UsersOrm:
-        # если колонка называется password_hash — оставь так; если password — поменяй.
-        stored_hash = getattr(user, "password_hash", None) if user else None
-        if not user or not stored_hash or not verify_password(data.password, stored_hash):
+        if not user:
+            raise AuthenticationException("Invalid email or password")
+
+        if user.status != UserStatus.active:
+            raise AuthenticationException("Пользователь не активен")
+
+        if not verify_password(data.password, user.password_hash):
             raise AuthenticationException("Invalid email or password")
 
         refresh_jti = str(uuid.uuid4())
         now = datetime.now(timezone.utc)
         refresh_ttl = timedelta(seconds=settings.REFRESH_EXPIRES)
-        expires_at = now + refresh_ttl
 
         session = await self.db.sessions.create_session(
             user_id=user.id,
             jti=refresh_jti,
             user_agent=user_agent,
             ip=ip,
-            expires_at=expires_at,
+            expires_at=now + refresh_ttl,
         )
 
         access = create_jwt(
-            subject=int(user.id),
+            subject=user.id,
             token_type="access",
             secret_key=settings.JWT_SECRET_KEY,
             algorithm=settings.JWT_ALGORITHM,
@@ -80,7 +84,7 @@ class AuthServices(BaseService):
         )
 
         refresh = create_jwt(
-            subject=int(user.id),
+            subject=user.id,
             token_type="refresh",
             secret_key=settings.JWT_SECRET_KEY,
             algorithm=settings.JWT_ALGORITHM,
@@ -97,14 +101,20 @@ class AuthServices(BaseService):
             secret_key=settings.JWT_SECRET_KEY,
             algorithms=[settings.JWT_ALGORITHM],
         )
+
         if payload.get("type") != "refresh":
             raise AuthorizationException("Refresh token required")
 
         user_id = int(payload["sub"])
         sid = payload.get("sid")
         jti = payload.get("jti")
+
         if not sid or not jti:
             raise AuthenticationException("Invalid refresh token")
+
+        user = await self.db.users.get(user_id)
+        if not user or user.status != UserStatus.active:
+            raise AuthenticationException("Пользователь не активен")
 
         session = await self.db.sessions.get(uuid.UUID(sid))
         if not session or session.user_id != user_id:
@@ -120,9 +130,7 @@ class AuthServices(BaseService):
             raise AuthenticationException("Refresh token reused")
 
         new_jti = str(uuid.uuid4())
-        await self.db.sessions.rotate_jti(
-            session.id, new_jti, now=datetime.now(timezone.utc)
-        )
+        await self.db.sessions.rotate_jti(session.id, new_jti, now=datetime.now(timezone.utc))
 
         access = create_jwt(
             subject=user_id,
@@ -132,7 +140,7 @@ class AuthServices(BaseService):
             expires_delta=timedelta(seconds=settings.ACCESS_EXPIRES),
         )
 
-        new_refresh = create_jwt(
+        refresh = create_jwt(
             subject=user_id,
             token_type="refresh",
             secret_key=settings.JWT_SECRET_KEY,
@@ -142,7 +150,7 @@ class AuthServices(BaseService):
         )
 
         await self.db.commit()
-        return TokenPair(access_token=access, refresh_token=new_refresh)
+        return TokenPair(access_token=access, refresh_token=refresh)
 
     async def logout_current(self, refresh_token: str) -> None:
         payload = decode_jwt(

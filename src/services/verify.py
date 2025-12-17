@@ -33,8 +33,8 @@ class VerifyService(BaseService):
         if not user:
             raise ObjectNotFoundException("User not found")
         # было: getattr(user, "is_verified", False)
-        if getattr(user, "email_verified", False):
-            raise AlreadyExistsException("Already verified")
+        if user.status != UserStatus.pending_email:
+            raise AuthenticationException("Верификация не пройдена")
 
         key_code = f"verify:code:{email}"
         key_rl = f"verify:rl:{email}"
@@ -74,9 +74,8 @@ class VerifyService(BaseService):
         user = await self.db.users.get_by_email(email)
         if not user:
             raise ObjectNotFoundException("Пользователь не найден")
-        if getattr(user, "email_verified", False):
-            raise AlreadyExistsException("Уже подтверждён")
-
+        if user.status != UserStatus.pending_email:
+            return
         # подготавливаем апдейт под твою схему
         update_values = {"email_verified": True}
         # если хочешь сразу активировать
