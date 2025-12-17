@@ -250,6 +250,8 @@ class ProductsService(BaseService):
         product.is_blocked = False
         product.blocked_reason = None
 
+        product.is_active = True
+
         await self.db.session.commit()
         await self.db.session.refresh(product)
 
