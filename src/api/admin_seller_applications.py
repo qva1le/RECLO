@@ -1,15 +1,15 @@
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy import select
 
-from src.api.dependencies import DBDep
+from src.api.dependencies import DBDep, require_admin
 from src.models.seller_applications import SellerApplicationsOrm
 from src.models.shops import ShopsOrm
 from src.schemas.enums import SellerApplicationsStatus, ShopStatus
 from src.schemas.seller_applications import SellerApplicationOut, SellerApplicationCreate, SellerApplicationsReview
 
-router = APIRouter(prefix="/admin/seller-applications", tags=["Админка для заявок"])
+router = APIRouter(prefix="/admin/seller-applications", tags=["Админка для заявок"], dependencies=[Depends(require_admin)])
 
 @router.get("", response_model=list[SellerApplicationOut])
 async def list_seller_applications(db: DBDep, status: SellerApplicationsStatus | None = None):

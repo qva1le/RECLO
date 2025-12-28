@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 
-from src.api.dependencies import DBDep
+from src.api.dependencies import DBDep, require_admin
 from src.schemas.enums import ShopType, ShopStatus, BusinessType
 from src.schemas.shops import ShopOut, ShopStatusChange
 from src.services.shops import ShopsService
 
-router = APIRouter(prefix="/admin/shops", tags=["Админка для магазинов"])
+router = APIRouter(prefix="/admin/shops", tags=["Админка для магазинов"], dependencies=[Depends(require_admin)])
 
 @router.get("/{shop_id}", response_model=ShopOut)
 async def get_shop_admin(

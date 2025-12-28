@@ -78,6 +78,15 @@ async def get_current_user_id(
 UserIdDep = Annotated[int, Depends(get_current_user_id)]
 
 
+CurrentUserDep = Annotated[UsersOrm, Depends(get_current_user)]
+
+async def require_admin(user: CurrentUserDep) -> UsersOrm:
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin only")
+    return user
+
+AdminDep = Annotated[UsersOrm, Depends(require_admin)]
+
 # ---------- REDIS ----------
 def get_redis(request: Request) -> RedisManager:
     rm: RedisManager = request.app.state.redis_manager

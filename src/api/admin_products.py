@@ -1,11 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from sqlalchemy.testing import db
 
-from src.api.dependencies import DBDep
+from src.api.dependencies import DBDep, require_admin
 from src.schemas.products import ProductAdminPublic, ProductUpdate, BlockProductPayload
 from src.services.products import ProductsService
 
-router = APIRouter(prefix="/admin/products", tags=["Админка для товаров"])
+router = APIRouter(prefix="/admin/products", tags=["Админка для товаров"], dependencies=[Depends(require_admin)])
 
 
 @router.get("", response_model=list[ProductAdminPublic])
