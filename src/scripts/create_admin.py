@@ -42,7 +42,7 @@ async def demote(email: str | None, name: str | None) -> None:
         else:
             raise ValueError("Нужен email или name")
 
-        res = await db.session.execite(stmt)
+        res = await db.session.execute(stmt)
         user = res.scalar_one_or_none()
 
         if not user:
