@@ -1,0 +1,90 @@
+version: "3.9"
+
+services:
+  traefik:
+    image: traefik:v3.1
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+
+      - --certificatesresolvers.le.acme.email=${LE_EMAIL}
+      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.le.acme.httpchallenge=true
+      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
+
+      - --api.dashboard=true
+      - --log.level=INFO
+
+    ports:
+      - "80:80"
+      - "443:443"
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/letsencrypt:/letsencrypt
+
+    networks:
+      - web
+
+    labels:
+      - traefik.enable=true
+
+      # Dashboard: https://traefik.${DOMAIN}
+      - traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN}`)
+      - traefik.http.routers.traefik.entrypoints=websecure
+      - traefik.http.routers.traefik.tls=true
+      - traefik.http.routers.traefik.tls.certresolver=le
+      - traefik.http.routers.traefik.service=api@internal
+      - traefik.http.routers.traefik.middlewares=traefik-auth
+      - traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_BASIC_AUTH_USERS}
+
+  app:
+    build: .
+    container_name: reclo_app
+    restart: unless-stopped
+    expose:
+      - "8000"
+    environment:
+      # Пример, подставь свои переменные:
+      # DB_URL: ${DB_URL}
+      # JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      # JWT_ALGORITHM: ${JWT_ALGORITHM}
+      # и т.д.
+      ENV: "prod"
+    networks:
+      - web
+    labels:
+      - traefik.enable=true
+
+      # API: https://api.${DOMAIN}
+      - traefik.http.routers.app.rule=Host(`api.${DOMAIN}`)
+      - traefik.http.routers.app.entrypoints=websecure
+      - traefik.http.routers.app.tls=true
+      - traefik.http.routers.app.tls.certresolver=le
+      - traefik.http.services.app.loadbalancer.server.port=8000
+
+      # Admin: https://api.${DOMAIN}/admin/* -> BasicAuth
+      - traefik.http.routers.admin.rule=Host(`api.${DOMAIN}`) && PathPrefix(`/admin`)
+      - traefik.http.routers.admin.entrypoints=websecure
+      - traefik.http.routers.admin.tls=true
+      - traefik.http.routers.admin.tls.certresolver=le
+      - traefik.http.routers.admin.priority=100
+      - traefik.http.routers.admin.service=app
+      - traefik.http.routers.admin.middlewares=admin-auth
+      - traefik.http.middlewares.admin-auth.basicauth.users=${ADMIN_BASIC_AUTH_USERS}
+
+      # (опционально) IP allowlist на /admin:
+      - traefik.http.middlewares.admin-ip.ipallowlist.sourcerange=${ADMIN_ALLOWED_IPS}
+      - traefik.http.routers.admin.middlewares=admin-auth,admin-ip
+
+networks:
+  web:
+    driver: bridge
