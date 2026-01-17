@@ -53,6 +53,8 @@ class UsersOrm(Base):
     product_fires: Mapped[list["ProductFiresOrm"]] = relationship(
         "ProductFiresOrm",
         back_populates="user",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        lazy="noload",
     )
 

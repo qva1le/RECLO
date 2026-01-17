@@ -2,7 +2,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, String, Text, Integer, Float, Boolean, DateTime
+from sqlalchemy import ForeignKey, String, Text, Integer, Float, Boolean, DateTime, CheckConstraint, text
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from src.database import Base
@@ -37,7 +37,7 @@ class ProductsOrm(Base):
     reviews_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     rating_avg:    Mapped[float | None] = mapped_column(Float)
 
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default=text("0"), nullable=False)
 
     is_blocked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     blocked_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
@@ -64,10 +64,17 @@ class ProductsOrm(Base):
         ProductFiresOrm,
         back_populates="product",
         cascade="all, delete-orphan",
+        passive_deletes=True,
+        lazy="noload",
     )
 
     attributes = relationship(
         ProductAttributesValuesOrm,
         back_populates="product",
         cascade="all, delete-orphan",
+    )
+
+
+    __table_args__ = (
+        CheckConstraint("fires_count >= 0", name="ck_products_fires_count_nonneg"),
     )
