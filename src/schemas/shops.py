@@ -27,6 +27,8 @@ class ShopEditAdmin(BaseModel):
     shop_type: ShopType
     status: ShopStatus
 
+
+
 class ShopOut(BaseModel):
     id: int
     owner_id: int

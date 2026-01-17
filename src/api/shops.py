@@ -19,16 +19,16 @@ async def get_all_shops(db: DBDep, shop_type: ShopType | None = Query(None)):
 
 
 
-@router.get("/my_shop", response_model=ShopOut)
+@router.get("/my_shop", response_model=ShopsPublic)
 async def get_my_shop(
     db: DBDep,
     _shop: ShopDep,
     user_id: UserIdDep
 ):
     shop = await ShopsService(db).get_my_shop_user(user_id)
-    return ShopOut.model_validate(shop, from_attributes=True)
+    return ShopsPublic.model_validate(shop, from_attributes=True)
 
-@router.put("/my/edit_shop", response_model=ShopOut)
+@router.put("/my/edit_shop", response_model=ShopsPublic)
 async def edit_my_shop(
         db: DBDep,
         _shop: ShopDep,
